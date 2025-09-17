@@ -1,0 +1,32 @@
+name: check-format
+
+on:
+  push:
+
+jobs:
+  check-format:
+    name: Check format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install clang-format
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-format
+
+      - name: Run clang-format check
+        shell: bash
+        run: |
+          set -e
+
+          files="$(find . -regex '.*\.\(c\|h\)$')"
+          xargs clang-format -style=file -i <<< "$files"
+
+          if ! git diff --exit-code; then
+            echo "The following files are not formatted correctly:"
+            git diff --name-only
+            exit 1
+          fi
